@@ -14,10 +14,10 @@ import autogen
 from autogen import ConversableAgent, UserProxyAgent, GroupChat, GroupChatManager
 
 from agents.orchestrator_agent import OrchestratorAgent
-from agents.data_agent import DataAgent
-from agents.analysis_agent import AnalysisAgent
-from agents.knowledge_agent import KnowledgeAgent
-from agents.visualization_agent import VisualizationAgent
+from agents.DataProcessingAgent import DataProcessingAgent
+from agents.CausalFeatureSelectionAgent import CausalFeatureSelectionAgent
+from agents.FeatureScreeningAgent import FeatureScreeningAgent
+from agents.ValidationAgent import ValidationAgent
 from autogen_framework import create_function_map
 
 # 配置日志
@@ -110,29 +110,29 @@ class BioInfoMASProduction:
             description="Orchestrator for coordinating multi-agent workflow",
         )
         
-        # 2. DataAgent - 数据获取和预处理
-        self.data_agent = DataAgent(self.llm_config)
+        # 2. DataProcessingAgent - 数据获取和预处理
+        self.data_agent = DataProcessingAgent(self.llm_config)
         data_agent = self.data_agent.get_agent()
         data_agent.register_for_llm(
             description="Data management agent for downloading, QC, and preprocessing"
         )
         
-        # 3. AnalysisAgent - 数据分析
-        self.analysis_agent = AnalysisAgent(self.llm_config)
+        # 3. CausalFeatureSelectionAgent - 数据分析
+        self.analysis_agent = CausalFeatureSelectionAgent(self.llm_config)
         analysis_agent = self.analysis_agent.get_agent()
         analysis_agent.register_for_llm(
             description="Analysis agent for executing bioinformatics analyses"
         )
         
-        # 4. KnowledgeAgent - 知识推理
-        self.knowledge_agent = KnowledgeAgent(self.llm_config)
+        # 4. FeatureScreeningAgent - 知识推理
+        self.knowledge_agent = FeatureScreeningAgent(self.llm_config)
         knowledge_agent = self.knowledge_agent.get_agent()
         knowledge_agent.register_for_llm(
             description="Knowledge agent for querying knowledge graphs and literature"
         )
         
-        # 5. VisualizationAgent - 可视化和报告
-        self.visualization_agent = VisualizationAgent(self.llm_config)
+        # 5. ValidationAgent - 可视化和报告
+        self.visualization_agent = ValidationAgent(self.llm_config)
         visualization_agent = self.visualization_agent.get_agent()
         visualization_agent.register_for_llm(
             description="Visualization agent for generating plots and reports"
@@ -148,22 +148,22 @@ class BioInfoMASProduction:
         try:
             self.data_agent.register_tools()
         except Exception:
-            logger.warning("为 DataAgent 注册工具失败", exc_info=True)
+            logger.warning("为 DataProcessingAgent 注册工具失败", exc_info=True)
 
         try:
             self.analysis_agent.register_tools()
         except Exception:
-            logger.warning("为 AnalysisAgent 注册工具失败", exc_info=True)
+            logger.warning("为 CausalFeatureSelectionAgent 注册工具失败", exc_info=True)
 
         try:
             self.knowledge_agent.register_tools()
         except Exception:
-            logger.warning("为 KnowledgeAgent 注册工具失败", exc_info=True)
+            logger.warning("为 FeatureScreeningAgent 注册工具失败", exc_info=True)
 
         try:
             self.visualization_agent.register_tools()
         except Exception:
-            logger.warning("为 VisualizationAgent 注册工具失败", exc_info=True)
+            logger.warning("为 ValidationAgent 注册工具失败", exc_info=True)
 
         logger.info("✓ 已为各智能体按需注册工具")
         
@@ -339,10 +339,10 @@ class BioInfoMASProduction:
         
         # 根据agent名称获取对应的智能体
         agent_map = {
-            "DataAgent": self.data_agent,
-            "AnalysisAgent": self.analysis_agent,
-            "KnowledgeAgent": self.knowledge_agent,
-            "VisualizationAgent": self.visualization_agent,
+            "DataProcessingAgen": self.data_agent,
+            "CausalFeatureSelectionAgent": self.analysis_agent,
+            "FeatureScreeningAgent": self.knowledge_agent,
+            "ValidationAgent": self.visualization_agent,
         }
         
         agent_instance = agent_map.get(agent_name)

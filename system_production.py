@@ -13,7 +13,7 @@ from dotenv import load_dotenv
 import autogen
 from autogen import ConversableAgent, UserProxyAgent, GroupChat, GroupChatManager
 
-from agents.orchestrator_agent import OrchestratorAgent
+from agents.PlannerAgent import PlannerAgent
 from agents.DataProcessingAgent import DataProcessingAgent
 from agents.CausalFeatureSelectionAgent import CausalFeatureSelectionAgent
 from agents.FeatureScreeningAgent import FeatureScreeningAgent
@@ -100,17 +100,7 @@ class BioInfoMASProduction:
     def _init_agents(self):
         """初始化所有智能体，配置工具调用能力"""
         
-        # 1. OrchestratorAgent - 任务规划者和协调者
-        self.orchestrator = OrchestratorAgent(self.llm_config)
-        orchestrator_agent = self.orchestrator.get_agent()
-        
-        # 为协调者配置工具调用
-        orchestrator_agent.register_for_execution(
-            name="orchestrator_caller",
-            description="Orchestrator for coordinating multi-agent workflow",
-        )
-        
-        # 2. DataProcessingAgent - 数据获取和预处理
+        # 1. DataProcessingAgent - 数据获取和预处理
         self.data_agent = DataProcessingAgent(self.llm_config)
         data_agent = self.data_agent.get_agent()
         data_agent.register_for_llm(

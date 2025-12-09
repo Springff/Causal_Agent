@@ -45,7 +45,7 @@ def example_local_causal_inference():
     print(json.dumps(result, ensure_ascii=False, indent=2))
     
     # 保存结果
-    output_path = system.save_results(output_dir="CausalAgent/results/deg_analysis")
+    output_path = system.save_results(output_dir="CAUSAL_AGENT/results/deg_analysis")
     print(f"✓ 详细结果已保存到: {output_path}")
     print(f"✓ 任务ID: {result.get('task_id')}")
     

@@ -241,7 +241,7 @@ class CausalAgentProduction:
         """
         使用协调者智能体规划工作流 - 真实LLM调用
         """
-        orchestrator = self.orchestrator.get_agent()
+        planner_agent = self.planner_agent.get_agent()
         
         # 构建规划提示
         planning_prompt = f"""
@@ -261,9 +261,9 @@ class CausalAgentProduction:
             # 调用LLM进行真实的工作流规划
             logger.info("调用LLM进行工作流规划...")
             
-            response = orchestrator.generate_reply(
+            response = planner_agent.generate_reply(
                 messages=[{"content": planning_prompt, "role": "user"}],
-                sender=self.orchestrator.get_agent(),
+                sender=self.planner_agent.get_agent(),
             )
             
             logger.info(f"LLM规划响应: {response}")

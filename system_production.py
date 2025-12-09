@@ -31,7 +31,7 @@ logger = logging.getLogger(__name__)
 load_dotenv()
 
 
-class BioInfoMASProduction:
+class CausalAgentProduction:
     """
     生产级生物信息学多智能体系统
     
@@ -44,9 +44,7 @@ class BioInfoMASProduction:
     """
 
     def __init__(self, llm_config: Optional[Dict[str, Any]] = None, verbose: bool = False):
-        """
-        初始化生产级系统
-        
+        """        
         Args:
             llm_config: LLM配置
             verbose: 是否输出详细日志
@@ -100,32 +98,41 @@ class BioInfoMASProduction:
     def _init_agents(self):
         """初始化所有智能体，配置工具调用能力"""
         
-        # 1. DataProcessingAgent - 数据获取和预处理
+        # 1. PlannerAgent - 协调者
+        self.planner_agent = PlannerAgent(self.llm_config)
+        planner_agent = self.planner_agent.get_agent()
+        planner_agent.register_for_llm(
+            description="规划智能体，负责任务分解、工作流编排和多智能体协调"
+        )   
+        
+
+        # 2. DataProcessingAgent - 数据获取和预处理
         self.data_agent = DataProcessingAgent(self.llm_config)
         data_agent = self.data_agent.get_agent()
         data_agent.register_for_llm(
-            description="Data management agent for downloading, QC, and preprocessing"
+            description="数据处理智能体，根据数据概况，决定清洗策略和预处理方式"
+        )
+
+        # 3. FeatureScreeningAgent - 知识推理
+        self.feascureen_agent = FeatureScreeningAgent(self.llm_config)
+        feascureen_agent = self.feascureen_agent.get_agent()
+        feascureen_agent.register_for_llm(
+            description="特征筛选智能体，利用统计相关性和LLM的语义知识，快速剔除无关变量，缩小搜索空间"
         )
         
-        # 3. CausalFeatureSelectionAgent - 数据分析
-        self.analysis_agent = CausalFeatureSelectionAgent(self.llm_config)
-        analysis_agent = self.analysis_agent.get_agent()
-        analysis_agent.register_for_llm(
-            description="Analysis agent for executing bioinformatics analyses"
+        # 4. CausalFeatureSelectionAgent - 数据分析
+        self.causal_agent = CausalFeatureSelectionAgent(self.llm_config)
+        causal_agent = self.causal_agent.get_agent()
+        causal_agent.register_for_llm(
+            description="因果特征选择智能体，负责寻找局部因果特征"
         )
         
-        # 4. FeatureScreeningAgent - 知识推理
-        self.knowledge_agent = FeatureScreeningAgent(self.llm_config)
-        knowledge_agent = self.knowledge_agent.get_agent()
-        knowledge_agent.register_for_llm(
-            description="Knowledge agent for querying knowledge graphs and literature"
-        )
-        
+
         # 5. ValidationAgent - 可视化和报告
         self.visualization_agent = ValidationAgent(self.llm_config)
         visualization_agent = self.visualization_agent.get_agent()
         visualization_agent.register_for_llm(
-            description="Visualization agent for generating plots and reports"
+            description="验证智能体，复制验证局部因果结构"
         )
         
         logger.info("✓ 5个专业化智能体已初始化")
@@ -141,12 +148,12 @@ class BioInfoMASProduction:
             logger.warning("为 DataProcessingAgent 注册工具失败", exc_info=True)
 
         try:
-            self.analysis_agent.register_tools()
+            self.causal_agent.register_tools()
         except Exception:
             logger.warning("为 CausalFeatureSelectionAgent 注册工具失败", exc_info=True)
 
         try:
-            self.knowledge_agent.register_tools()
+            self.feascureen_agent.register_tools()
         except Exception:
             logger.warning("为 FeatureScreeningAgent 注册工具失败", exc_info=True)
 
@@ -330,8 +337,8 @@ class BioInfoMASProduction:
         # 根据agent名称获取对应的智能体
         agent_map = {
             "DataProcessingAgen": self.data_agent,
-            "CausalFeatureSelectionAgent": self.analysis_agent,
-            "FeatureScreeningAgent": self.knowledge_agent,
+            "FeatureScreeningAgent": self.feascureen_agent,
+            "CausalFeatureSelectionAgent": self.causal_agent,
             "ValidationAgent": self.visualization_agent,
         }
         

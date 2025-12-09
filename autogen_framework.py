@@ -35,370 +35,295 @@ AUTOGEN_CONFIG = {
 class BioInfoTools:
     """生物信息学工具集合 - 所有工具都是可被LLM调用的函数"""
 
-    # ===== 数据获取工具 =====
     @staticmethod
-    def download_data(database: str, accession_id: str, data_type: str) -> Dict[str, Any]:
+    def get_data_summary(filepath: str) -> Dict[str, Any]:
         """
-        从生物数据库下载数据
+        获取数据的基本概要信息，包括行数、列数、缺失值比例以及各列的数据类型
         
         Args:
-            database: 数据库名称 (GEO, TCGA, NCBI, UniProt)
-            accession_id: 数据库访问号
-            data_type: 数据类型 (fastq, bam, vcf, etc.)
+            filepath: 输入数据文件的路径（支持CSV、TSV等格式）
         
         Returns:
-            下载信息和文件路径
+            包含数据概要信息的字典
         """
         return {
             "status": "success",
-            "database": database,
-            "accession_id": accession_id,
-            "data_type": data_type,
-            "file_path": f"./data/{accession_id}.{data_type}",
-            "file_size": "1.2 GB",
-            "download_time": "2.5 hours"
+            "filepath": filepath,
+            "n_rows": 10000,
+            "n_cols": 50,
+            "missing_ratio": 0.03,
+            "column_dtypes": {"col1": "float64", "col2": "object", "col3": "int64"}
         }
 
-    @staticmethod
-    def quality_control(input_file: str, quality_threshold: float = 30.0) -> Dict[str, Any]:
-        """
-        执行FastQC质量控制
-        
-        Args:
-            input_file: 输入文件路径
-            quality_threshold: 质量阈值
-        
-        Returns:
-            质量控制报告
-        """
-        return {
-            "status": "PASS" if quality_threshold <= 30 else "FAIL",
-            "total_reads": 50000000,
-            "read_length": 150,
-            "gc_content": 48.5,
-            "quality_score": f"Q{int(quality_threshold)}+",
-            "adapter_content": "0.2%",
-            "report_path": "./qc_results/fastqc_report.html"
-        }
 
     @staticmethod
-    def preprocess_data(input_file: str, trim_adapters: bool = True) -> Dict[str, Any]:
+    def impute_missing_values(strategy: str, method: Optional[str] = None) -> Dict[str, Any]:
         """
-        数据预处理（适配器修剪和比对）
+        根据指定策略和方法处理数据中的缺失值
         
         Args:
-            input_file: 输入文件
-            trim_adapters: 是否修剪适配器
+            strategy: 缺失值处理策略：'drop' 删除含缺失值的行，'impute' 使用指定方法填补
+            method: 填补方法（仅在 strategy='impute' 时有效）：'mean' 使用均值，'median' 使用中位数，'knn' 使用K近邻插补
         
         Returns:
-            预处理结果
+            缺失值处理结果摘要
         """
         return {
             "status": "success",
-            "input_file": input_file,
-            "steps": ["adapter_trimming", "sequence_alignment"],
-            "output_bam": "./output.bam",
-            "alignment_rate": 0.95,
-            "aligned_reads": 47500000,
-            "execution_time": "3.5 hours"
+            "strategy": strategy,
+            "method": method,
+            "missing_before": 1500,
+            "missing_after": 0 if strategy == "impute" else 0,
+            "rows_dropped": 0 if strategy == "impute" else 200
         }
 
-    # ===== 数据分析工具 =====
+
     @staticmethod
-    def differential_expression_analysis(
-        count_matrix: str,
-        control_samples: List[str],
-        treatment_samples: List[str],
-        method: str = "deseq2"
-    ) -> Dict[str, Any]:
+    def detect_variable_types(threshold: int) -> Dict[str, Any]:
         """
-        差异表达分析
+        自动判断数据集中各列为连续型还是离散型变量
         
         Args:
-            count_matrix: 基因计数矩阵文件
-            control_samples: 对照组样本
-            treatment_samples: 处理组样本
-            method: 分析方法 (deseq2, edger)
+            threshold: 用于区分离散与连续变量的唯一值数量阈值（例如：唯一值少于该阈值视为离散型）
         
         Returns:
-            差异表达分析结果
+            变量类型识别结果
+        """
+        return {
+            "status": "success",
+            "threshold": threshold,
+            "variable_types": {"col1": "continuous", "col2": "discrete", "col3": "continuous"}
+        }
+
+
+    @staticmethod
+    def discretize_column(column_name: str, bins: int) -> Dict[str, Any]:
+        """
+        将指定的连续变量列离散化为分箱区间
+        
+        Args:
+            column_name: 需要离散化的列名
+            bins: 分箱数量（例如：5 表示将数据划分为5个区间）
+        
+        Returns:
+            离散化结果信息
+        """
+        return {
+            "status": "success",
+            "column_name": column_name,
+            "bins": bins,
+            "bin_edges": [0.0, 1.2, 2.5, 3.8, 5.0],
+            "value_counts": [2000, 2500, 3000, 2500]
+        }
+
+
+    @staticmethod
+    def normalize_data(method: str) -> Dict[str, Any]:
+        """
+        对数据进行标准化或归一化处理
+        
+        Args:
+            method: 标准化方法：'z-score'（均值为0，标准差为1），'min-max'（缩放到[0,1]），'robust'（基于中位数和四分位距）
+        
+        Returns:
+            标准化结果摘要
         """
         return {
             "status": "success",
             "method": method,
-            "total_genes": 20000,
-            "significant_genes": 2500,
-            "upregulated": 1200,
-            "downregulated": 1300,
-            "fdr_threshold": 0.05,
-            "top_genes": [
-                {"gene": "BRCA1", "log2fc": 5.2, "padj": 1.5e-50},
-                {"gene": "TP53", "log2fc": 4.8, "padj": 3.2e-45}
-            ]
+            "normalized_columns": ["col1", "col3", "col5"],
+            "skipped_columns": ["col2", "col4"]
         }
 
+
     @staticmethod
-    def pathway_enrichment(gene_list: List[str], database: str = "kegg") -> Dict[str, Any]:
+    def calculate_correlation(target_var: str, method: str) -> Dict[str, Any]:
         """
-        通路富集分析
+        计算数据集中所有特征与指定目标变量之间的相关系数
         
         Args:
-            gene_list: 基因列表
-            database: 数据库 (kegg, go)
+            target_var: 目标变量的列名
+            method: 相关系数计算方法：'pearson'（线性相关），'spearman'（秩相关），'kendall'（序相关）
         
         Returns:
-            富集分析结果
+            相关系数结果字典
         """
         return {
             "status": "success",
-            "database": database,
-            "input_genes": len(gene_list),
-            "enriched_pathways": [
-                {
-                    "pathway_id": "hsa05200",
-                    "pathway_name": "Pathways in cancer",
-                    "p_value": 3.5e-12,
-                    "gene_count": 85
-                },
-                {
-                    "pathway_id": "hsa04115",
-                    "pathway_name": "p53 signaling pathway",
-                    "p_value": 1.2e-15,
-                    "gene_count": 45
-                }
-            ]
+            "target_var": target_var,
+            "method": method,
+            "correlations": {"col1": 0.72, "col2": -0.15, "col3": 0.88}
         }
 
+
     @staticmethod
-    def variant_calling(bam_file: str, reference_genome: str) -> Dict[str, Any]:
+    def calculate_mutual_information(target_var: str) -> Dict[str, Any]:
         """
-        变异检测
+        计算所有特征与目标变量之间的互信息，用于捕捉非线性依赖关系
         
         Args:
-            bam_file: BAM文件路径
-            reference_genome: 参考基因组
+            target_var: 目标变量的列名
         
         Returns:
-            变异检测结果
+            互信息结果字典
         """
         return {
             "status": "success",
-            "total_variants": 50000,
-            "snps": 40000,
-            "indels": 8000,
-            "structural_variants": 2000,
-            "transitions_transversions": 2.1,
-            "output_vcf": "./variants.vcf"
+            "target_var": target_var,
+            "mutual_information": {"col1": 0.45, "col2": 0.12, "col3": 0.67}
         }
 
+
     @staticmethod
-    def sequence_blast(query_sequence: str, database: str = "nr") -> Dict[str, Any]:
+    def drop_features(feature_list: List[str]) -> Dict[str, Any]:
         """
-        BLAST序列相似性搜索
+        从当前数据集中移除指定的特征（列）
         
         Args:
-            query_sequence: 查询序列
-            database: BLAST数据库
+            feature_list: 要删除的特征名称列表
         
         Returns:
-            BLAST搜索结果
+            删除特征后的结果摘要
         """
         return {
             "status": "success",
-            "database": database,
-            "hits": [
-                {
-                    "hit_id": "gi|123456789",
-                    "description": "Homo sapiens BRCA1 protein",
-                    "identity": 0.98,
-                    "e_value": 2.3e-120
-                },
-                {
-                    "hit_id": "gi|987654321",
-                    "description": "Mus musculus Brca1 protein",
-                    "identity": 0.95,
-                    "e_value": 1.8e-110
-                }
-            ]
+            "dropped_features": feature_list,
+            "remaining_features": ["col1", "col3", "col5"],
+            "n_features_before": 5,
+            "n_features_after": 3
         }
 
-    # ===== 知识推理工具 =====
+
     @staticmethod
-    def query_knowledge_graph(entity: str, entity_type: str = "gene") -> Dict[str, Any]:
+    def run_local_discovery_algorithm(algorithm: str, target_var: str, alpha: float = 0.05) -> Dict[str, Any]:
         """
-        查询知识图谱
+        运行局部因果发现算法，识别与目标变量直接相关的特征（马尔可夫毯或父/子节点）
         
         Args:
-            entity: 查询实体（基因名、疾病等）
-            entity_type: 实体类型
+            algorithm: 局部因果发现算法名称：'MMPC'（最大最小父节点和子节点）、'HITON-PC'、'IAMB'（增量关联马尔可夫毯）
+            target_var: 目标变量的列名
+            alpha: 统计检验的显著性水平（默认0.05）
         
         Returns:
-            知识图谱查询结果
+            因果发现结果
         """
         return {
             "status": "success",
-            "entity": entity,
-            "relations": [
-                {
-                    "source": entity,
-                    "target": "Breast Cancer",
-                    "relation": "associated_with",
-                    "evidence": 245
-                },
-                {
-                    "source": entity,
-                    "target": "DNA Repair Pathway",
-                    "relation": "participates_in",
-                    "evidence": 156
-                }
-            ]
+            "algorithm": algorithm,
+            "target_var": target_var,
+            "alpha": alpha,
+            "selected_features": ["col1", "col3"]
         }
 
+
     @staticmethod
-    def search_literature(query: str, max_results: int = 5) -> Dict[str, Any]:
+    def test_conditional_independence(x: str, y: str, conditioning_set: List[str]) -> Dict[str, Any]:
         """
-        搜索PubMed文献
+        测试两个变量 X 和 Y 在给定条件集 Z 下是否条件独立
         
         Args:
-            query: 搜索查询
-            max_results: 最大返回结果数
+            x: 变量 X 的列名
+            y: 变量 Y 的列名
+            conditioning_set: 条件变量集合（列名列表）
         
         Returns:
-            文献搜索结果
+            条件独立性检验结果
         """
         return {
             "status": "success",
-            "query": query,
-            "total_results": 5234,
-            "papers": [
-                {
-                    "pmid": "35245123",
-                    "title": "Gene expression profiling reveals novel biomarkers",
-                    "authors": ["Smith J", "Johnson K"],
-                    "year": 2023,
-                    "journal": "Nature Genetics",
-                    "impact_factor": 38.2
-                },
-                {
-                    "pmid": "35102456",
-                    "title": "Pathway enrichment analysis in differential expression",
-                    "authors": ["Brown R", "Davis S"],
-                    "year": 2023,
-                    "journal": "Genome Biology",
-                    "impact_factor": 15.6
-                }
-            ]
+            "x": x,
+            "y": y,
+            "conditioning_set": conditioning_set,
+            "p_value": 0.032,
+            "independent": False
         }
 
+
     @staticmethod
-    def explain_biological_significance(
-        analysis_type: str,
-        results: Dict[str, Any]
-    ) -> Dict[str, Any]:
+    def orient_edges(skeleton_graph: Dict[str, List[str]]) -> Dict[str, Any]:
         """
-        解释分析结果的生物学意义
+        基于 V-结构规则（如无向图中的碰撞结构）对骨架图中的边进行方向判定
         
         Args:
-            analysis_type: 分析类型
-            results: 分析结果
+            skeleton_graph: 无向骨架图，通常以邻接表形式表示（例如 {'A': ['B', 'C'], 'B': ['A'], 'C': ['A']}）
         
         Returns:
-            生物学解释
+            有向图（部分定向）结构
         """
         return {
             "status": "success",
-            "analysis_type": analysis_type,
-            "interpretation": {
-                "summary": "The analysis reveals significant changes in gene expression...",
-                "key_findings": [
-                    "Upregulation of DNA repair genes suggests cellular stress response",
-                    "Downregulation of cell cycle genes indicates cell cycle arrest",
-                    "Changes consistent with p53-mediated apoptosis"
-                ],
-                "clinical_relevance": "These findings suggest potential therapeutic targets"
-            }
+            "input_skeleton": skeleton_graph,
+            "oriented_edges": [("A", "B"), ("C", "B")],
+            "undirected_edges": [("D", "E")]
         }
 
-    # ===== 可视化工具 =====
+
     @staticmethod
-    def generate_volcano_plot(deg_results: Dict[str, Any]) -> Dict[str, Any]:
+    def evaluate_predictive_power(feature_set: List[str], target_var: str, model_type: str) -> Dict[str, Any]:
         """
-        生成火山图
+        使用指定的特征集和目标变量训练预测模型，并返回模型性能指标（分类任务返回AUC，回归任务返回R²）
         
         Args:
-            deg_results: 差异表达分析结果
+            feature_set: 用于训练的特征名称列表
+            target_var: 目标变量的列名
+            model_type: 用于评估的预测模型类型
         
         Returns:
-            图表生成信息
+            模型评估结果
         """
         return {
             "status": "success",
-            "plot_type": "volcano",
-            "output_file": "./results/volcano_plot.html",
-            "description": "Interactive volcano plot showing differential expression"
+            "feature_set": feature_set,
+            "target_var": target_var,
+            "model_type": model_type,
+            "score": 0.92,
+            "metric": "AUC" if model_type in ["RandomForest", "LogisticRegression", "XGBoost"] else "R2"
         }
 
+
     @staticmethod
-    def generate_heatmap(expression_data: str) -> Dict[str, Any]:
+    def compare_with_baseline(feature_set: List[str], target_var: str) -> Dict[str, Any]:
         """
-        生成热图
+        对比仅使用因果发现得到的特征与使用全部特征在预测目标变量时的性能差异
         
         Args:
-            expression_data: 表达数据文件
+            feature_set: 因果发现筛选出的特征列表
+            target_var: 目标变量的列名
         
         Returns:
-            图表生成信息
+            性能对比结果
         """
         return {
             "status": "success",
-            "plot_type": "heatmap",
-            "output_file": "./results/heatmap.html",
-            "dimensions": {"genes": 200, "samples": 50}
+            "target_var": target_var,
+            "causal_features": feature_set,
+            "baseline_score": 0.87,
+            "causal_score": 0.92,
+            "improvement": 0.05,
+            "metric": "AUC"
         }
 
+
     @staticmethod
-    def generate_pca_plot(expression_data: str) -> Dict[str, Any]:
+    def run_stability_selection(target_var: str, algorithm: str, n_resamples: int) -> Dict[str, Any]:
         """
-        生成PCA图
+        通过在多个数据子样本上重复运行因果发现算法，评估每个特征被选中的稳定性（频率）
         
         Args:
-            expression_data: 表达数据文件
+            target_var: 目标变量的列名
+            algorithm: 用于稳定性选择的局部因果发现算法
+            n_resamples: 重采样（如自助采样）的次数，用于评估特征选择的稳定性（例如：100）
         
         Returns:
-            图表生成信息
+            特征稳定性评分
         """
         return {
             "status": "success",
-            "plot_type": "pca",
-            "output_file": "./results/pca_plot.html",
-            "variance_explained": {"PC1": 45.2, "PC2": 28.5, "PC3": 12.3}
-        }
-
-    @staticmethod
-    def generate_report(
-        report_title: str,
-        sections: List[str],
-        output_format: str = "markdown"
-    ) -> Dict[str, Any]:
-        """
-        生成分析报告
-        
-        Args:
-            report_title: 报告标题
-            sections: 报告章节
-            output_format: 输出格式 (markdown, pdf, html)
-        
-        Returns:
-            报告生成信息
-        """
-        return {
-            "status": "success",
-            "report_title": report_title,
-            "output_file": f"./results/report.{output_format}",
-            "sections": len(sections),
-            "format": output_format,
-            "generation_time": "5 minutes"
-        }
+            "target_var": target_var,
+            "algorithm": algorithm,
+            "n_resamples": n_resamples,
+            "stability_scores": {"col1": 0.94, "col3": 0.88, "col5": 0.32}
+        }    
 
 
 # ============================================================================

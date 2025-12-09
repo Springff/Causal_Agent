@@ -336,7 +336,7 @@ class CausalAgentProduction:
         
         # 根据agent名称获取对应的智能体
         agent_map = {
-            "DataProcessingAgen": self.data_agent,
+            "DataProcessingAgent": self.data_agent,
             "FeatureScreeningAgent": self.feascureen_agent,
             "CausalFeatureSelectionAgent": self.causal_agent,
             "ValidationAgent": self.visualization_agent,
@@ -379,7 +379,7 @@ class CausalAgentProduction:
 
                 # 让 agent 决定是否进行函数调用（优先使用 agent 提供的接口）
                 try:
-                    print(messages)
+                    # print(messages)
                     resp = agent.generate_reply(
                         messages=messages,
                         sender=agent,

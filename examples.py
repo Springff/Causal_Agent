@@ -29,7 +29,7 @@ def example_local_causal_inference():
 
     
     research_goal = """
-    识别与目标变量（致死率）存在潜在因果关系的基因？数据存储在：D:\Desktop\Causal_Agent\data\data.csv，行是样本，列是基因，第一列是标签。
+    识别与目标变量（致死率）存在潜在因果关系的基因？数据存储在："D:\Desktop\Causal_Agent\data\data.csv"，行是样本，列是基因，第一列是标签。
     """
     
     result = system.run_analysis(
